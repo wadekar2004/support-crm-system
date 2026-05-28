@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, SessionLocal
 import models
@@ -9,12 +9,18 @@ from typing import Optional
 
 app = FastAPI()
 
-# CORS
+# =========================
+# CORS FIX
+# =========================
+
 origins = [
     "http://localhost:5173",
     "http://localhost:5174",
+
+    # YOUR VERCEL DOMAINS
     "https://support-crm-system-delta.vercel.app",
     "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
+    "https://support-crm-system-ilwbzplum-support-crm-system-s-projects.vercel.app",
 ]
 
 app.add_middleware(
@@ -25,13 +31,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# IMPORTANT
+# FIXES OPTIONS PREFLIGHT REQUEST
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    return Response(status_code=200)
+
+# =========================
+# CREATE TABLES
+# =========================
+
 models.Base.metadata.create_all(bind=engine)
+
+# =========================
+# HOME
+# =========================
 
 @app.get("/")
 def home():
-    return {"message": "Support CRM API Running"}
+    return {
+        "message": "Support CRM API Running"
+    }
 
+# =========================
 # CREATE TICKET
+# =========================
+
 @app.post("/api/tickets")
 def create_ticket(ticket: TicketCreate):
 
@@ -61,7 +86,10 @@ def create_ticket(ticket: TicketCreate):
     finally:
         db.close()
 
+# =========================
 # GET ALL TICKETS
+# =========================
+
 @app.get("/api/tickets")
 def get_tickets(
     search: Optional[str] = None,
@@ -74,6 +102,7 @@ def get_tickets(
 
         query = db.query(models.Ticket)
 
+        # SEARCH
         if search:
             query = query.filter(
                 or_(
@@ -85,8 +114,11 @@ def get_tickets(
                 )
             )
 
+        # FILTER
         if status:
-            query = query.filter(models.Ticket.status == status)
+            query = query.filter(
+                models.Ticket.status == status
+            )
 
         tickets = query.all()
 
@@ -95,7 +127,10 @@ def get_tickets(
     finally:
         db.close()
 
+# =========================
 # GET SINGLE TICKET
+# =========================
+
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket(ticket_id: str):
 
@@ -118,7 +153,10 @@ def get_ticket(ticket_id: str):
     finally:
         db.close()
 
+# =========================
 # UPDATE TICKET
+# =========================
+
 @app.put("/api/tickets/{ticket_id}")
 def update_ticket(ticket_id: str, status: str):
 
@@ -142,12 +180,17 @@ def update_ticket(ticket_id: str, status: str):
         db.commit()
         db.refresh(ticket)
 
-        return {"message": "Updated Successfully"}
+        return {
+            "message": "Updated Successfully"
+        }
 
     finally:
         db.close()
 
+# =========================
 # DELETE TICKET
+# =========================
+
 @app.delete("/api/tickets/{ticket_id}")
 def delete_ticket(ticket_id: str):
 
@@ -168,7 +211,9 @@ def delete_ticket(ticket_id: str):
         db.delete(ticket)
         db.commit()
 
-        return {"message": "Ticket Deleted"}
+        return {
+            "message": "Ticket Deleted"
+        }
 
     finally:
         db.close()
