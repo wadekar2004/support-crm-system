@@ -9,7 +9,7 @@ from typing import Optional
 
 app = FastAPI()
 
-# VERY IMPORTANT CORS FIX
+# VERY IMPORTANT
 origins = [
     "http://localhost:5173",
     "http://localhost:5174",
@@ -18,10 +18,11 @@ origins = [
     "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app",
 ]
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # IMPORTANT
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -48,23 +49,14 @@ def create_ticket(ticket: TicketCreate):
         count = db.query(models.Ticket).count() + 1
 
         new_ticket = models.Ticket(
-
             ticket_id=f"TKT-{count:03}",
-
             customer_name=ticket.customer_name,
-
             customer_email=ticket.customer_email,
-
             subject=ticket.subject,
-
             description=ticket.description,
-
             status="Open",
-
             created_at=datetime.utcnow(),
-
             updated_at=datetime.utcnow()
-
         )
 
         db.add(new_ticket)
@@ -113,7 +105,6 @@ def get_tickets(
             )
 
         if status:
-
             query = query.filter(
                 models.Ticket.status == status
             )
@@ -134,7 +125,9 @@ def get_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(models.Ticket).filter(
+        ticket = db.query(
+            models.Ticket
+        ).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
@@ -162,7 +155,9 @@ def update_ticket(
 
     try:
 
-        ticket = db.query(models.Ticket).filter(
+        ticket = db.query(
+            models.Ticket
+        ).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
@@ -197,7 +192,9 @@ def delete_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(models.Ticket).filter(
+        ticket = db.query(
+            models.Ticket
+        ).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
