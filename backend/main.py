@@ -9,26 +9,39 @@ from typing import Optional
 
 app = FastAPI()
 
+# =========================
 # CORS FIX
+# =========================
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:5174",
+
         "https://support-crm-system-delta.vercel.app",
-        "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app"
 
+        "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
 
+        "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app"
     ],
+
     allow_credentials=True,
+
     allow_methods=["*"],
-    allow_headers=["*"]
+
+    allow_headers=["*"],
 )
 
-# CREATE TABLES
+# =========================
+# CREATE DATABASE TABLES
+# =========================
 models.Base.metadata.create_all(bind=engine)
 
 
+# =========================
+# HOME ROUTE
+# =========================
 @app.get("/")
 def home():
 
@@ -37,7 +50,9 @@ def home():
     }
 
 
+# =========================
 # CREATE TICKET
+# =========================
 @app.post("/api/tickets")
 def create_ticket(ticket: TicketCreate):
 
@@ -82,7 +97,9 @@ def create_ticket(ticket: TicketCreate):
         db.close()
 
 
+# =========================
 # GET ALL TICKETS
+# =========================
 @app.get("/api/tickets")
 def get_tickets(
 
@@ -99,7 +116,7 @@ def get_tickets(
             models.Ticket
         )
 
-        # SEARCH
+        # SEARCH FUNCTIONALITY
         if search:
 
             query = query.filter(
@@ -108,19 +125,19 @@ def get_tickets(
 
                     models.Ticket.customer_name.contains(search),
 
-                    models.Ticket.subject.contains(search),
-
-                    models.Ticket.ticket_id.contains(search),
-
                     models.Ticket.customer_email.contains(search),
 
-                    models.Ticket.description.contains(search)
+                    models.Ticket.subject.contains(search),
+
+                    models.Ticket.description.contains(search),
+
+                    models.Ticket.ticket_id.contains(search)
 
                 )
 
             )
 
-        # FILTER
+        # FILTER BY STATUS
         if status:
 
             query = query.filter(
@@ -136,7 +153,9 @@ def get_tickets(
         db.close()
 
 
+# =========================
 # GET SINGLE TICKET
+# =========================
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket(ticket_id: str):
 
@@ -164,7 +183,9 @@ def get_ticket(ticket_id: str):
         db.close()
 
 
+# =========================
 # UPDATE TICKET
+# =========================
 @app.put("/api/tickets/{ticket_id}")
 def update_ticket(
     ticket_id: str,
@@ -205,7 +226,9 @@ def update_ticket(
         db.close()
 
 
+# =========================
 # DELETE TICKET
+# =========================
 @app.delete("/api/tickets/{ticket_id}")
 def delete_ticket(ticket_id: str):
 
