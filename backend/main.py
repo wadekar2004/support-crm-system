@@ -9,9 +9,10 @@ from typing import Optional
 
 app = FastAPI()
 
-# =========================
-# CORS CONFIGURATION
-# =========================
+# PREFLIGHT FIX
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    return {"message": "OK"}
 
 origins = [
     "http://localhost:5173",
