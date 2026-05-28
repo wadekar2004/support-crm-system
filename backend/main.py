@@ -15,7 +15,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:5174",
-        "https://support-crm-system-delta.vercel.app"
+        "https://support-crm-system-delta.vercel.app",
+        "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app"
+
 
     ],
     allow_credentials=True,
