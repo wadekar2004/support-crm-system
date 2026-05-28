@@ -9,47 +9,35 @@ from typing import Optional
 
 app = FastAPI()
 
-# PREFLIGHT FIX
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str):
-    return {"message": "OK"}
-
+# VERY IMPORTANT CORS FIX
 origins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "https://support-crm-system-delta.vercel.app",
     "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
-    "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app"
+    "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False,
+    allow_origins=["*"],   # IMPORTANT
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# =========================
-# CREATE DATABASE TABLES
-# =========================
-
+# CREATE TABLES
 models.Base.metadata.create_all(bind=engine)
 
-# =========================
-# HOME ROUTE
-# =========================
 
 @app.get("/")
 def home():
     return {
-        "message": "Support CRM API Running Successfully"
+        "message": "Support CRM API Running"
     }
 
-# =========================
-# CREATE TICKET
-# =========================
 
+# CREATE TICKET
 @app.post("/api/tickets")
 def create_ticket(ticket: TicketCreate):
 
@@ -60,14 +48,23 @@ def create_ticket(ticket: TicketCreate):
         count = db.query(models.Ticket).count() + 1
 
         new_ticket = models.Ticket(
+
             ticket_id=f"TKT-{count:03}",
+
             customer_name=ticket.customer_name,
+
             customer_email=ticket.customer_email,
+
             subject=ticket.subject,
+
             description=ticket.description,
+
             status="Open",
+
             created_at=datetime.utcnow(),
+
             updated_at=datetime.utcnow()
+
         )
 
         db.add(new_ticket)
@@ -81,10 +78,8 @@ def create_ticket(ticket: TicketCreate):
     finally:
         db.close()
 
-# =========================
-# GET ALL TICKETS
-# =========================
 
+# GET ALL TICKETS
 @app.get("/api/tickets")
 def get_tickets(
     search: Optional[str] = None,
@@ -105,13 +100,13 @@ def get_tickets(
 
                     models.Ticket.customer_name.contains(search),
 
-                    models.Ticket.customer_email.contains(search),
-
                     models.Ticket.subject.contains(search),
 
-                    models.Ticket.description.contains(search),
+                    models.Ticket.ticket_id.contains(search),
 
-                    models.Ticket.ticket_id.contains(search)
+                    models.Ticket.customer_email.contains(search),
+
+                    models.Ticket.description.contains(search)
 
                 )
 
@@ -130,10 +125,8 @@ def get_tickets(
     finally:
         db.close()
 
-# =========================
-# GET SINGLE TICKET
-# =========================
 
+# GET SINGLE TICKET
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket(ticket_id: str):
 
@@ -157,10 +150,8 @@ def get_ticket(ticket_id: str):
     finally:
         db.close()
 
-# =========================
-# UPDATE TICKET
-# =========================
 
+# UPDATE TICKET
 @app.put("/api/tickets/{ticket_id}")
 def update_ticket(
     ticket_id: str,
@@ -191,16 +182,14 @@ def update_ticket(
         db.refresh(ticket)
 
         return {
-            "message": "Ticket Updated Successfully"
+            "message": "Updated Successfully"
         }
 
     finally:
         db.close()
 
-# =========================
-# DELETE TICKET
-# =========================
 
+# DELETE TICKET
 @app.delete("/api/tickets/{ticket_id}")
 def delete_ticket(ticket_id: str):
 
@@ -224,7 +213,7 @@ def delete_ticket(ticket_id: str):
         db.commit()
 
         return {
-            "message": "Ticket Deleted Successfully"
+            "message": "Ticket Deleted"
         }
 
     finally:
