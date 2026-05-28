@@ -9,17 +9,20 @@ from typing import Optional
 
 app = FastAPI()
 
+# CORS FIX
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://localhost:5174"
+        "http://localhost:5174",
+        "https://support-crm-system.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
 
+# CREATE TABLES
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -27,22 +30,23 @@ models.Base.metadata.create_all(bind=engine)
 def home():
 
     return {
-        "message":"Support CRM API Running"
+        "message": "Support CRM API Running"
     }
 
 
+# CREATE TICKET
 @app.post("/api/tickets")
-def create_ticket(ticket:TicketCreate):
+def create_ticket(ticket: TicketCreate):
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        count=db.query(
+        count = db.query(
             models.Ticket
-        ).count()+1
+        ).count() + 1
 
-        new_ticket=models.Ticket(
+        new_ticket = models.Ticket(
 
             ticket_id=f"TKT-{count:03}",
 
@@ -75,25 +79,27 @@ def create_ticket(ticket:TicketCreate):
         db.close()
 
 
+# GET ALL TICKETS
 @app.get("/api/tickets")
 def get_tickets(
 
-search:Optional[str]=None,
-status:Optional[str]=None
+    search: Optional[str] = None,
+    status: Optional[str] = None
 
 ):
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        query=db.query(
+        query = db.query(
             models.Ticket
         )
 
+        # SEARCH
         if search:
 
-            query=query.filter(
+            query = query.filter(
 
                 or_(
 
@@ -101,19 +107,24 @@ status:Optional[str]=None
 
                     models.Ticket.subject.contains(search),
 
-                    models.Ticket.ticket_id.contains(search)
+                    models.Ticket.ticket_id.contains(search),
+
+                    models.Ticket.customer_email.contains(search),
+
+                    models.Ticket.description.contains(search)
 
                 )
 
             )
 
+        # FILTER
         if status:
 
-            query=query.filter(
-                models.Ticket.status==status
+            query = query.filter(
+                models.Ticket.status == status
             )
 
-        tickets=query.all()
+        tickets = query.all()
 
         return tickets
 
@@ -122,17 +133,18 @@ status:Optional[str]=None
         db.close()
 
 
+# GET SINGLE TICKET
 @app.get("/api/tickets/{ticket_id}")
-def get_ticket(ticket_id:str):
+def get_ticket(ticket_id: str):
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        ticket=db.query(
+        ticket = db.query(
             models.Ticket
         ).filter(
-            models.Ticket.ticket_id==ticket_id
+            models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
@@ -149,20 +161,21 @@ def get_ticket(ticket_id:str):
         db.close()
 
 
+# UPDATE TICKET
 @app.put("/api/tickets/{ticket_id}")
 def update_ticket(
-ticket_id:str,
-status:str
+    ticket_id: str,
+    status: str
 ):
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        ticket=db.query(
+        ticket = db.query(
             models.Ticket
         ).filter(
-            models.Ticket.ticket_id==ticket_id
+            models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
@@ -172,18 +185,16 @@ status:str
                 detail="Ticket not found"
             )
 
-        ticket.status=status
+        ticket.status = status
 
-        ticket.updated_at=datetime.utcnow()
+        ticket.updated_at = datetime.utcnow()
 
         db.commit()
 
         db.refresh(ticket)
 
         return {
-
-            "message":"Updated"
-
+            "message": "Updated Successfully"
         }
 
     finally:
@@ -191,17 +202,18 @@ status:str
         db.close()
 
 
+# DELETE TICKET
 @app.delete("/api/tickets/{ticket_id}")
-def delete_ticket(ticket_id:str):
+def delete_ticket(ticket_id: str):
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        ticket=db.query(
+        ticket = db.query(
             models.Ticket
         ).filter(
-            models.Ticket.ticket_id==ticket_id
+            models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
@@ -216,9 +228,7 @@ def delete_ticket(ticket_id:str):
         db.commit()
 
         return {
-
-            "message":"Ticket Deleted"
-
+            "message": "Ticket Deleted"
         }
 
     finally:
