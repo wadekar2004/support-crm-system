@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, SessionLocal
 import models
@@ -6,18 +6,19 @@ from schemas import TicketCreate
 from datetime import datetime
 from sqlalchemy import or_
 from typing import Optional
+from uuid import uuid4
 
 app = FastAPI()
 
 # =========================
-# CORS FIX
+# CORS CONFIG (FIXED)
 # =========================
 
 origins = [
     "http://localhost:5173",
     "http://localhost:5174",
 
-    # YOUR VERCEL DOMAINS
+    # Vercel domains
     "https://support-crm-system-delta.vercel.app",
     "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
     "https://support-crm-system-ilwbzplum-support-crm-system-s-projects.vercel.app",
@@ -31,14 +32,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# IMPORTANT
-# FIXES OPTIONS PREFLIGHT REQUEST
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str):
-    return Response(status_code=200)
-
 # =========================
-# CREATE TABLES
+# DB INIT
 # =========================
 
 models.Base.metadata.create_all(bind=engine)
@@ -49,12 +44,10 @@ models.Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def home():
-    return {
-        "message": "Support CRM API Running"
-    }
+    return {"message": "Support CRM API Running"}
 
 # =========================
-# CREATE TICKET
+# CREATE TICKET (FIXED)
 # =========================
 
 @app.post("/api/tickets")
@@ -63,11 +56,8 @@ def create_ticket(ticket: TicketCreate):
     db = SessionLocal()
 
     try:
-
-        count = db.query(models.Ticket).count() + 1
-
         new_ticket = models.Ticket(
-            ticket_id=f"TKT-{count:03}",
+            ticket_id=f"TKT-{uuid4().hex[:8].upper()}",
             customer_name=ticket.customer_name,
             customer_email=ticket.customer_email,
             subject=ticket.subject,
@@ -91,18 +81,13 @@ def create_ticket(ticket: TicketCreate):
 # =========================
 
 @app.get("/api/tickets")
-def get_tickets(
-    search: Optional[str] = None,
-    status: Optional[str] = None
-):
+def get_tickets(search: Optional[str] = None, status: Optional[str] = None):
 
     db = SessionLocal()
 
     try:
-
         query = db.query(models.Ticket)
 
-        # SEARCH
         if search:
             query = query.filter(
                 or_(
@@ -114,15 +99,10 @@ def get_tickets(
                 )
             )
 
-        # FILTER
         if status:
-            query = query.filter(
-                models.Ticket.status == status
-            )
+            query = query.filter(models.Ticket.status == status)
 
-        tickets = query.all()
-
-        return tickets
+        return query.all()
 
     finally:
         db.close()
@@ -137,16 +117,12 @@ def get_ticket(ticket_id: str):
     db = SessionLocal()
 
     try:
-
         ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-            raise HTTPException(
-                status_code=404,
-                detail="Ticket not found"
-            )
+            raise HTTPException(404, "Ticket not found")
 
         return ticket
 
@@ -163,16 +139,12 @@ def update_ticket(ticket_id: str, status: str):
     db = SessionLocal()
 
     try:
-
         ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-            raise HTTPException(
-                status_code=404,
-                detail="Ticket not found"
-            )
+            raise HTTPException(404, "Ticket not found")
 
         ticket.status = status
         ticket.updated_at = datetime.utcnow()
@@ -180,9 +152,7 @@ def update_ticket(ticket_id: str, status: str):
         db.commit()
         db.refresh(ticket)
 
-        return {
-            "message": "Updated Successfully"
-        }
+        return {"message": "Updated Successfully"}
 
     finally:
         db.close()
@@ -197,23 +167,17 @@ def delete_ticket(ticket_id: str):
     db = SessionLocal()
 
     try:
-
         ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-            raise HTTPException(
-                status_code=404,
-                detail="Ticket not found"
-            )
+            raise HTTPException(404, "Ticket not found")
 
         db.delete(ticket)
         db.commit()
 
-        return {
-            "message": "Ticket Deleted"
-        }
+        return {"message": "Ticket Deleted"}
 
     finally:
         db.close()
