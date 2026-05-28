@@ -2,7 +2,10 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API = "https://support-crm-system-production-9078.up.railway.app";
+
 function CreateTicket() {
+
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -14,20 +17,29 @@ function CreateTicket() {
 
   const submit = async () => {
     try {
-      await axios.post("http://127.0.0.1:8000/api/tickets", form);
+
+      await axios.post(`${API}/api/tickets`, form);
+
       alert("Ticket Created Successfully");
+
       navigate("/");
+
     } catch (err) {
+
+      console.log(err);
+
       alert("Error creating ticket");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex justify-center items-center bg-gray-100">
 
       <div className="bg-white p-8 rounded-xl shadow-lg w-[500px]">
 
-        <h2 className="text-2xl font-bold mb-5">Create New Ticket</h2>
+        <h2 className="text-2xl font-bold mb-5">
+          Create New Ticket
+        </h2>
 
         <input
           className="w-full border p-2 mb-3 rounded"
@@ -39,7 +51,7 @@ function CreateTicket() {
 
         <input
           className="w-full border p-2 mb-3 rounded"
-          placeholder="Email"
+          placeholder="Customer Email"
           onChange={(e) =>
             setForm({ ...form, customer_email: e.target.value })
           }
@@ -54,9 +66,9 @@ function CreateTicket() {
         />
 
         <textarea
+          rows="5"
           className="w-full border p-2 mb-3 rounded"
           placeholder="Description"
-          rows="5"
           onChange={(e) =>
             setForm({ ...form, description: e.target.value })
           }
@@ -64,7 +76,7 @@ function CreateTicket() {
 
         <button
           onClick={submit}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white p-2 rounded"
         >
           Submit Ticket
         </button>

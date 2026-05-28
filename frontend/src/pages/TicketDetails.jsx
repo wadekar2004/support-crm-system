@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
+const API = "https://support-crm-system-production-9078.up.railway.app";
+
 function TicketDetails() {
+
   const { id } = useParams();
+
   const navigate = useNavigate();
 
   const [ticket, setTicket] = useState(null);
+
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -14,26 +19,35 @@ function TicketDetails() {
   }, []);
 
   const loadTicket = async () => {
+
     const res = await axios.get(
-      `http://127.0.0.1:8000/api/tickets/${id}`
+      `${API}/api/tickets/${id}`
     );
+
     setTicket(res.data);
+
     setStatus(res.data.status);
   };
 
   const updateStatus = async () => {
+
     await axios.put(
-      `http://127.0.0.1:8000/api/tickets/${id}`,
+      `${API}/api/tickets/${id}`,
       {},
-      { params: { status } }
+      {
+        params: { status }
+      }
     );
+
     loadTicket();
   };
 
   const deleteTicket = async () => {
+
     await axios.delete(
-      `http://127.0.0.1:8000/api/tickets/${id}`
+      `${API}/api/tickets/${id}`
     );
+
     navigate("/");
   };
 
@@ -45,25 +59,35 @@ function TicketDetails() {
 
       <div className="bg-white max-w-3xl mx-auto p-8 rounded-xl shadow">
 
-        <div className="flex justify-between mb-4">
-          <h1 className="text-2xl font-bold">Ticket Details</h1>
+        <div className="flex justify-between mb-5">
+
+          <h1 className="text-2xl font-bold">
+            Ticket Details
+          </h1>
 
           <Link to="/">
             <button className="bg-gray-500 text-white px-3 py-1 rounded">
               Back
             </button>
           </Link>
+
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
+
           <p><b>ID:</b> {ticket.ticket_id}</p>
+
           <p><b>Name:</b> {ticket.customer_name}</p>
+
           <p><b>Email:</b> {ticket.customer_email}</p>
+
           <p><b>Subject:</b> {ticket.subject}</p>
+
           <p><b>Description:</b> {ticket.description}</p>
+
         </div>
 
-        <div className="mt-5 flex gap-3">
+        <div className="mt-6 flex gap-3">
 
           <select
             className="border p-2 rounded"
