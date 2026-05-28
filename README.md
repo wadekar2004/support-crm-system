@@ -2,8 +2,8 @@
 # Support CRM System
 
 ##  Live Demo
-Frontend: https://your-vercel-link
-Backend: https://your-railway-link
+Frontend: https://support-crm-system-ilwbzplum-support-crm-system-s-projects.vercel.app/
+Backend: https://support-crm-system-production-9078.up.railway.app/
 
 
 ## Features
