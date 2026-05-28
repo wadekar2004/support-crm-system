@@ -9,23 +9,19 @@ from typing import Optional
 
 app = FastAPI()
 
-# VERY IMPORTANT
-origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://support-crm-system-delta.vercel.app",
-    "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
-    "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app",
-]
-
-# CORS
+# CORS FIX
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# HANDLE OPTIONS REQUESTS
+@app.options("/{rest_of_path:path}")
+async def options_handler(rest_of_path: str):
+    return {"message": "OK"}
 
 # CREATE TABLES
 models.Base.metadata.create_all(bind=engine)
