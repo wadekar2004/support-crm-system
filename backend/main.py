@@ -9,30 +9,27 @@ from typing import Optional
 
 app = FastAPI()
 
-# CORS FIX
+# CORS
+origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://support-crm-system-delta.vercel.app",
+    "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# HANDLE OPTIONS REQUESTS
-@app.options("/{rest_of_path:path}")
-async def options_handler(rest_of_path: str):
-    return {"message": "OK"}
-
-# CREATE TABLES
 models.Base.metadata.create_all(bind=engine)
-
 
 @app.get("/")
 def home():
-    return {
-        "message": "Support CRM API Running"
-    }
-
+    return {"message": "Support CRM API Running"}
 
 # CREATE TICKET
 @app.post("/api/tickets")
@@ -56,16 +53,13 @@ def create_ticket(ticket: TicketCreate):
         )
 
         db.add(new_ticket)
-
         db.commit()
-
         db.refresh(new_ticket)
 
         return new_ticket
 
     finally:
         db.close()
-
 
 # GET ALL TICKETS
 @app.get("/api/tickets")
@@ -81,29 +75,18 @@ def get_tickets(
         query = db.query(models.Ticket)
 
         if search:
-
             query = query.filter(
-
                 or_(
-
                     models.Ticket.customer_name.contains(search),
-
                     models.Ticket.subject.contains(search),
-
                     models.Ticket.ticket_id.contains(search),
-
                     models.Ticket.customer_email.contains(search),
-
                     models.Ticket.description.contains(search)
-
                 )
-
             )
 
         if status:
-            query = query.filter(
-                models.Ticket.status == status
-            )
+            query = query.filter(models.Ticket.status == status)
 
         tickets = query.all()
 
@@ -111,7 +94,6 @@ def get_tickets(
 
     finally:
         db.close()
-
 
 # GET SINGLE TICKET
 @app.get("/api/tickets/{ticket_id}")
@@ -121,14 +103,11 @@ def get_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-
             raise HTTPException(
                 status_code=404,
                 detail="Ticket not found"
@@ -139,46 +118,34 @@ def get_ticket(ticket_id: str):
     finally:
         db.close()
 
-
 # UPDATE TICKET
 @app.put("/api/tickets/{ticket_id}")
-def update_ticket(
-    ticket_id: str,
-    status: str
-):
+def update_ticket(ticket_id: str, status: str):
 
     db = SessionLocal()
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-
             raise HTTPException(
                 status_code=404,
                 detail="Ticket not found"
             )
 
         ticket.status = status
-
         ticket.updated_at = datetime.utcnow()
 
         db.commit()
-
         db.refresh(ticket)
 
-        return {
-            "message": "Updated Successfully"
-        }
+        return {"message": "Updated Successfully"}
 
     finally:
         db.close()
-
 
 # DELETE TICKET
 @app.delete("/api/tickets/{ticket_id}")
@@ -188,26 +155,20 @@ def delete_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
         if not ticket:
-
             raise HTTPException(
                 status_code=404,
                 detail="Ticket not found"
             )
 
         db.delete(ticket)
-
         db.commit()
 
-        return {
-            "message": "Ticket Deleted"
-        }
+        return {"message": "Ticket Deleted"}
 
     finally:
         db.close()
