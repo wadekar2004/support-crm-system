@@ -9,50 +9,41 @@ from typing import Optional
 
 app = FastAPI()
 
-# =========================
-# CORS FIX
-# =========================
+# VERY IMPORTANT CORS FIX
+origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+
+    # OLD VERCEL URL
+    "https://support-crm-system-delta.vercel.app",
+
+    # OLD AUTO URL
+    "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
+
+    # CURRENT URL
+    "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-
-        "https://support-crm-system-delta.vercel.app",
-
-        "https://support-crm-system-aqqyvkwem-support-crm-system-s-projects.vercel.app",
-
-        "https://support-crm-system-git-main-support-crm-system-s-projects.vercel.app"
-    ],
-
+    allow_origins=origins,
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
 )
 
-# =========================
-# CREATE DATABASE TABLES
-# =========================
+# CREATE TABLES
 models.Base.metadata.create_all(bind=engine)
 
 
-# =========================
-# HOME ROUTE
-# =========================
 @app.get("/")
 def home():
-
     return {
         "message": "Support CRM API Running"
     }
 
 
-# =========================
 # CREATE TICKET
-# =========================
 @app.post("/api/tickets")
 def create_ticket(ticket: TicketCreate):
 
@@ -60,28 +51,17 @@ def create_ticket(ticket: TicketCreate):
 
     try:
 
-        count = db.query(
-            models.Ticket
-        ).count() + 1
+        count = db.query(models.Ticket).count() + 1
 
         new_ticket = models.Ticket(
-
             ticket_id=f"TKT-{count:03}",
-
             customer_name=ticket.customer_name,
-
             customer_email=ticket.customer_email,
-
             subject=ticket.subject,
-
             description=ticket.description,
-
             status="Open",
-
             created_at=datetime.utcnow(),
-
             updated_at=datetime.utcnow()
-
         )
 
         db.add(new_ticket)
@@ -93,30 +73,22 @@ def create_ticket(ticket: TicketCreate):
         return new_ticket
 
     finally:
-
         db.close()
 
 
-# =========================
 # GET ALL TICKETS
-# =========================
 @app.get("/api/tickets")
 def get_tickets(
-
     search: Optional[str] = None,
     status: Optional[str] = None
-
 ):
 
     db = SessionLocal()
 
     try:
 
-        query = db.query(
-            models.Ticket
-        )
+        query = db.query(models.Ticket)
 
-        # SEARCH FUNCTIONALITY
         if search:
 
             query = query.filter(
@@ -137,7 +109,6 @@ def get_tickets(
 
             )
 
-        # FILTER BY STATUS
         if status:
 
             query = query.filter(
@@ -149,13 +120,10 @@ def get_tickets(
         return tickets
 
     finally:
-
         db.close()
 
 
-# =========================
 # GET SINGLE TICKET
-# =========================
 @app.get("/api/tickets/{ticket_id}")
 def get_ticket(ticket_id: str):
 
@@ -163,9 +131,7 @@ def get_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
@@ -179,13 +145,10 @@ def get_ticket(ticket_id: str):
         return ticket
 
     finally:
-
         db.close()
 
 
-# =========================
 # UPDATE TICKET
-# =========================
 @app.put("/api/tickets/{ticket_id}")
 def update_ticket(
     ticket_id: str,
@@ -196,9 +159,7 @@ def update_ticket(
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
@@ -222,13 +183,10 @@ def update_ticket(
         }
 
     finally:
-
         db.close()
 
 
-# =========================
 # DELETE TICKET
-# =========================
 @app.delete("/api/tickets/{ticket_id}")
 def delete_ticket(ticket_id: str):
 
@@ -236,9 +194,7 @@ def delete_ticket(ticket_id: str):
 
     try:
 
-        ticket = db.query(
-            models.Ticket
-        ).filter(
+        ticket = db.query(models.Ticket).filter(
             models.Ticket.ticket_id == ticket_id
         ).first()
 
@@ -258,5 +214,4 @@ def delete_ticket(ticket_id: str):
         }
 
     finally:
-
         db.close()
